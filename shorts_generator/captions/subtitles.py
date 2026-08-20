@@ -1,9 +1,8 @@
-"""Caption generation built from Caption_Gen's SubtitlesProcessor.
+"""Caption generation for the shorts pipeline.
 
-Ports the useful pieces of `Caption_Gen/SubtitlesProcessor.py` (and its
-`conjunctions.py`) into the generator so captions can be produced from plain
-``{start, end, text}`` transcript segments — the exact shape the gateway
-transcriber returns — without any WhisperX/torch dependency.
+Produces captions from plain ``{start, end, text}`` transcript segments — the
+exact shape the gateway transcriber returns — without any external caption
+library or torch dependency.
 
 Word-level timing is estimated proportionally when the transcript has no word
 timings (see ``determine_advanced_split_points`` / ``generate_subtitles_from_split_points``).

@@ -24,6 +24,66 @@ and burns in word-level karaoke captions that track the spoken word.
 
 ---
 
+## 🎤 Captions
+
+Captions are a first-class part of the pipeline, not an afterthought. A
+dedicated, self-contained caption engine turns any transcript into word-timed,
+stylable subtitles that get burned straight into the video (no external
+subtitle library or dependency).
+
+### Word-level karaoke highlighting
+
+- Every caption line stays **fully visible** on screen.
+- The **currently-spoken word** is recolored in `active_color` while it is being
+  said, then returns to `text_color` — classic karaoke tracking, computed from
+  Whisper segment timings using proportional per-word windows.
+- Each word keeps a solid `outline_color` stroke for readability over footage.
+
+### Styling
+
+| Option | Default | Description |
+|---|---|---|
+| `karaoke` | `true` | Highlight the spoken word as it happens |
+| `text_color` | `#FFFFFF` | Normal word color |
+| `active_color` | `#FFD700` | Currently-spoken word color |
+| `outline_color` | `#000000` | Outline stroke (always on) |
+| `font_size` | `48` | Caption size (8–200) |
+
+All options are settable per request via `caption_options` (see the API
+reference) or live in the WebUI with an instant preview.
+
+### Clever placement
+
+Captions are anchored to the **top of the blur-bar band** — not the canvas
+edge — so they sit right on the blurred strip and never overlap the foreground.
+The anchor is computed per source video from its real dimensions (ffprobe),
+with a bottom-margin fallback for full-canvas sources.
+
+### Burned-caption awareness
+
+1. **OCR detection (optional)** — RapidOCR scans the source frames; subtitles
+   are only burned when the source does *not* already have them.
+2. **Force mode** — burn subtitles anyway, and skip OCR entirely to save ~1 min
+   per run.
+3. **Smart skip** — cleanly skips the burn and reports `captions: "skipped"`.
+
+### Output artifacts
+
+Each rendered short gets `.srt` and `.ass` sidecar files (tracked in SQLite)
+and a final video where the captions are burned in via `ffmpeg` + libass (a
+single re-encode pass, audio copied losslessly). The per-short result exposes
+`caption_srt`, `caption_file` and `caption_cues`, and the job-level result
+reports a `captions` status: `"burned"` / `"skipped"` / `"off"`.
+
+### Transcript caching
+
+Downloaded videos and their Whisper transcripts are cached on disk, so
+reprocessing the same video skips re-transcription.
+
+> **Note on non-space scripts** — for languages written without spaces
+> (Japanese, Chinese, Thai), line splitting can exceed the max line length;
+> this matches the upstream conjunction-based splitting behaviour.
+
 ## 🔧 How it works
 
 ```
@@ -65,7 +125,7 @@ shorts_generator/
 ├── config.py                  # Environment-variable configuration
 ├── pipeline.py                # End-to-end orchestrator
 ├── highlights.py              # Virality scoring prompts + logic
-├── captions/                  # Ported caption processor (no WhisperX dep)
+├── captions/                  # Self-contained caption engine
 │   ├── subtitles.py           #   cue building, .srt/.ass, burn, karaoke
 │   └── conjunctions.py        #   per-language line-splitting tables
 └── server/
@@ -114,7 +174,7 @@ shorts_generator.db# SQLite records (videos / clips / logs)
 
 ```bash
 # 1. Clone and enter the project
-git clone <your-repo-url> && cd Shorts-Generator
+git clone https://github.com/AliMurtazaAMJ/Shorts-Generator && cd Shorts-Generator
 
 # 2. Create a virtual environment and install dependencies
 python3 -m venv .venv
@@ -284,9 +344,10 @@ failure, with `status: "failed"`):
 
 ---
 
-## 🎞️ Captioning behaviour
+## 🎞️ Captioning decision matrix (API)
 
-Burning subtitles follows a small decision matrix:
+How the burner behaves at the field level (see also the [Captions](#-captions)
+section for everything the engine does):
 
 | `burn_captions` | `detect_captions` | `force_captions` | Behaviour |
 |---|---|---|---|
@@ -295,13 +356,9 @@ Burning subtitles follows a small decision matrix:
 | `true` | — | `true` | Always burn; OCR skipped (~1 min faster), result marked `captions_forced` |
 | `false` | — | — | No captions added (`captions: "off"`) |
 
-Caption styling: lines wrap at natural word boundaries, `karaoke` keeps the whole
-line visible and recolors the currently-spoken word in `active_color` while all
-other words render in `text_color` with an `outline_color` stroke.
-
-> Note: for languages written without spaces (e.g. Japanese, Chinese, Thai) line
-> splitting can exceed the max line length — inherited from the upstream
-> conjunction-based splitting logic.
+The job-level result additionally carries `has_burned_captions` when OCR ran,
+and `caption_options` echoes back whatever styling was applied so you can
+inspect exactly what was produced.
 
 ---
 
