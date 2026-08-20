@@ -1,0 +1,12 @@
+.env
+cookies.txt
+.venv/
+__pycache__/
+*.pyc
+resources/
+!resources/uploads/
+output/
+!output/uploads/
+*.db
+*.db-shm
+*.db-wal

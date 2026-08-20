@@ -1,0 +1,10 @@
+# Backup Manager ignore patterns
+# One pattern per line (.gitignore syntax)
+
+.venv/**
+__pycache__/**
+resources/clips/**
+resources/downloads/**
+resources/uploads/**
+output/**
+resources/**

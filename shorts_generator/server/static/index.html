@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Shorts Generator</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <!-- ============ Login ============ -->
+  <section id="login-view" class="screen hidden">
+    <form class="card login-card" id="login-form">
+      <h1>AI YouTube Shorts Generator</h1>
+      <p class="muted">Enter the server password to continue.</p>
+      <label for="login-key">Password</label>
+      <input id="login-key" type="password" autocomplete="current-password" required />
+      <button type="submit" class="btn primary">Unlock</button>
+      <p id="login-error" class="error-message hidden"></p>
+    </form>
+  </section>
+
+  <!-- ============ App ============ -->
+  <section id="app-view" class="screen hidden">
+    <header class="topbar">
+      <h1>AI YouTube Shorts Generator</h1>
+      <div class="topbar-actions">
+        <button id="back-btn" class="btn ghost hidden">Start new video</button>
+        <button id="media-btn" class="btn ghost">Media</button>
+      </div>
+    </header>
+
+    <!-- -------- input + options -------- -->
+    <form id="job-form" class="card">
+      <div class="form-row">
+        <div class="source-links">
+          <button type="button" class="tab active" data-src-tab="url">YouTube URL</button>
+          <button type="button" class="tab" data-src-tab="upload">Upload video</button>
+        </div>
+      </div>
+
+      <div id="src-url" class="source-pane">
+        <div class="form-group">
+          <label for="video-url">Video URL</label>
+          <input id="video-url" type="text"
+                 placeholder="https://www.youtube.com/watch?v=..." />
+        </div>
+      </div>
+
+      <div id="src-upload" class="source-pane hidden">
+        <div id="dropzone" class="dropzone">
+          <input id="file-input" type="file" accept="video/*,.mkv" class="hidden" />
+          <p>Drop a video here, or <span class="link">browse</span></p>
+          <p id="file-meta" class="muted hidden"></p>
+        </div>
+      </div>
+
+      <div class="config-bar">
+        <div class="config-field">
+          <label for="num-clips">Clips</label>
+          <input id="num-clips" type="number" min="1" max="20" value="3" />
+        </div>
+        <div class="config-field">
+          <label for="aspect-ratio">Ratio</label>
+          <select id="aspect-ratio">
+            <option value="9:16" selected>TikTok / Shorts</option>
+            <option value="1:1">Square (1:1)</option>
+            <option value="4:5">Feed (4:5)</option>
+            <option value="16:9">Landscape</option>
+            <option value="custom">Custom…</option>
+          </select>
+          <input id="aspect-custom" type="text" placeholder="e.g. 3:4"
+                 class="hidden" />
+        </div>
+        <div class="config-field">
+          <label for="format">Quality</label>
+          <select id="format">
+            <option value="720" selected>720p</option>
+            <option value="1080">1080p</option>
+            <option value="480">480p</option>
+            <option value="360">360p</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="focus">What kind of clips do you want?</label>
+        <textarea id="focus" rows="2"
+          placeholder="e.g. funny moments, the best productivity tips, the most controversial takes…"></textarea>
+      </div>
+
+      <label class="check">
+        <input id="burn-captions" type="checkbox" checked />
+        Add subtitles
+      </label>
+      <p id="captions-hint" class="muted hint">
+        Subtitles are only added if the source doesn't already have them.
+      </p>
+      <label class="check">
+        <input id="force-captions" type="checkbox" />
+        Add subtitles even if already present
+      </label>
+
+      <div id="caption-style" class="caption-styler">
+        <div class="caption-styler-head">
+          <h3>Caption style</h3>
+          <button type="button" id="cap-reset" class="btn ghost btn-sm">Reset</button>
+        </div>
+        <p class="muted hint">Fine-tune how subtitles are rendered on your clips.</p>
+        <div class="caption-swatches">
+          <label class="swatch" data-color-for="cap-color" style="--swatch:#ffffff">
+            <input id="cap-color" type="color" value="#ffffff" />
+            <span class="swatch-disc"></span>
+            <span class="swatch-name">Text</span>
+          </label>
+          <label class="swatch" data-color-for="cap-active" style="--swatch:#ffd700">
+            <input id="cap-active" type="color" value="#ffd700" />
+            <span class="swatch-disc"></span>
+            <span class="swatch-name">Active word</span>
+          </label>
+          <label class="swatch" data-color-for="cap-outline" style="--swatch:#000000">
+            <input id="cap-outline" type="color" value="#000000" />
+            <span class="swatch-disc"></span>
+            <span class="swatch-name">Outline</span>
+          </label>
+        </div>
+        <div class="caption-size">
+          <label for="cap-fontsize">Font size <output id="cap-size-val">48</output></label>
+          <input id="cap-fontsize" type="range" min="16" max="96" value="48" />
+        </div>
+        <div class="caption-preview" id="caption-preview">
+          <span class="preview-tag">live preview</span>
+          <span class="preview-bar">
+            <span class="pw">Keep</span>
+            <span class="pw is-active">moving</span>
+            <span class="pw">forward,</span>
+            <span class="pw">we're</span>
+            <span class="pw">almost</span>
+            <span class="pw">there.</span>
+          </span>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn primary" id="submit-btn">Generate shorts</button>
+      </div>
+      <p id="form-error" class="error-message hidden"></p>
+    </form>
+
+    <!-- -------- progress -------- -->
+    <section id="progress-view" class="card hidden">
+      <h2>Processing your video</h2>
+      <div class="job-meta muted">
+        <span id="job-id"></span>
+      </div>
+      <ul id="step-list" class="steps"></ul>
+      <div class="log-frame">
+        <pre id="log-tail" class="log"></pre>
+      </div>
+      <div class="form-actions">
+        <button id="cancel-btn" class="btn danger">Cancel</button>
+      </div>
+    </section>
+
+    <!-- -------- results -------- -->
+    <section id="results-view" class="hidden">
+      <div class="results-header">
+        <h2>Your shorts are ready</h2>
+        <p id="results-summary" class="muted"></p>
+      </div>
+      <div id="results-grid" class="grid"></div>
+    </section>
+
+    <!-- -------- media modal -------- -->
+    <div id="media-modal" class="modal-backdrop hidden">
+      <div class="modal">
+        <div class="modal-head">
+          <h2>Media Library</h2>
+          <button id="media-close" class="btn ghost">&times;</button>
+        </div>
+        <div class="modal-tabs">
+          <button type="button" class="tab active" data-media-tab="shorts">
+            Created Shorts</button>
+          <button type="button" class="tab" data-media-tab="uploads">
+            Uploaded Videos</button>
+          <button type="button" class="tab" data-media-tab="data">
+            Process Data</button>
+        </div>
+        <div id="media-shorts" class="modal-pane"></div>
+        <div id="media-uploads" class="modal-pane hidden"></div>
+        <div id="media-data" class="modal-pane hidden"></div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="credit-footer">
+    Developed by
+    <a href="https://www.linkedin.com/in/alimurtazaamj/" target="_blank" rel="noopener">AMJ</a>
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
