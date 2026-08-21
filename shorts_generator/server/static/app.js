@@ -219,7 +219,6 @@ function collectFormState() {
     clips: $("num-clips").value,
     ratio: $("aspect-ratio").value,
     custom: $("aspect-custom").value,
-    format: $("format").value,
     focus: $("focus").value,
     burn: $("burn-captions").checked,
     force: $("force-captions").checked,
@@ -253,7 +252,6 @@ function restoreFormState() {
   if (s.clips) $("num-clips").value = s.clips;
   if (s.ratio) $("aspect-ratio").value = s.ratio;
   if (s.custom) $("aspect-custom").value = s.custom;
-  if (s.format) $("format").value = s.format;
   if (s.focus) $("focus").value = s.focus;
   $("burn-captions").checked = !!s.burn;
   $("force-captions").checked = !!s.force;
@@ -309,7 +307,6 @@ $("job-form").addEventListener("submit", async (e) => {
       url,
       num_clips: numClips,
       aspect_ratio: aspectRatio(),
-      format: $("format").value,
       detect_captions: !$("force-captions").checked,
       burn_captions: $("burn-captions").checked,
       force_captions: $("force-captions").checked,

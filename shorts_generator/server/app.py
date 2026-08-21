@@ -58,7 +58,6 @@ class JobRequest(BaseModel):
     url: str = Field(..., min_length=1)
     num_clips: int = Field(default=3, ge=1, le=20)
     aspect_ratio: str = Field(default="9:16")
-    format: str = Field(default="720", pattern="^(360|480|720|1080)$")
     language: Optional[str] = None
     detect_captions: bool = True
     burn_captions: bool = True

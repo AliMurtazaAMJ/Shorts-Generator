@@ -39,18 +39,6 @@ def _import_ytdlp():
     return yt_dlp
 
 
-def _format_for(fmt: str) -> str:
-    """Map our '720' / '1080' shorthand to a yt-dlp format selector."""
-    try:
-        height = int(fmt)
-    except ValueError:
-        height = 720
-    return (
-        f"bestvideo[height<={height}][ext=mp4]+bestaudio[ext=m4a]/"
-        f"best[height<={height}][ext=mp4]/best"
-    )
-
-
 def _extract_youtube_video_id(source: str) -> Optional[str]:
     """Best-effort extraction of a YouTube video id from a URL."""
     parsed = urlparse(source)
@@ -134,7 +122,7 @@ def _title_for(path: str) -> str:
 
 
 def download_youtube_local(
-    video_url: str, fmt: str = "720", out_dir: Optional[str] = None
+    video_url: str, out_dir: Optional[str] = None
 ) -> Tuple[str, str]:
     """Download a remote URL or resolve a local file; returns (path, title)."""
     local_path = _resolve_local_path(video_url)
@@ -162,20 +150,19 @@ def download_youtube_local(
             if cached:
                 print(f"[download/local] reusing cached download: {cached}", flush=True)
                 return cached, _title_for(cached)
-        path, title = _download_inner(yt_dlp, video_url, fmt, out_dir, video_id)
+        path, title = _download_inner(yt_dlp, video_url, out_dir, video_id)
         _write_sidecar_title(path, title)
         return path, title
 
 
 def _download_inner(
-    yt_dlp, video_url: str, fmt: str, out_dir: str, video_id: str
+    yt_dlp, video_url: str, out_dir: str, video_id: str
 ) -> Tuple[str, str]:
-    print(f"[download/local] {video_url} @ {fmt}p → {out_dir}/", flush=True)
+    print(f"[download/local] {video_url} (best) → {out_dir}/", flush=True)
 
     base_opts = {
-        "format": _format_for(fmt),
+        "format": "bestvideo+bestaudio/best",
         "outtmpl": os.path.join(out_dir, "source_%(id)s.%(ext)s"),
-        "merge_output_format": "mp4",
         "quiet": True,
         "no_warnings": True,
         "noprogress": True,

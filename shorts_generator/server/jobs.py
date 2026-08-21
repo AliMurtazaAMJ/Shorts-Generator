@@ -218,7 +218,6 @@ class JobManager:
                         youtube_url=job.params["url"],
                         num_clips=int(job.params.get("num_clips", 3)),
                         aspect_ratio=job.params.get("aspect_ratio", "9:16"),
-                        download_format=job.params.get("format", "720"),
                         language=job.params.get("language") or None,
                         detect_captions=bool(job.params.get("detect_captions", True)),
                         burn_captions=bool(job.params.get("burn_captions", True)),

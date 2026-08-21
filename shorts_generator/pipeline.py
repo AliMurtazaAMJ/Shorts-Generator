@@ -15,7 +15,6 @@ def generate_shorts(
     youtube_url: str,
     num_clips: int = 3,
     aspect_ratio: str = "9:16",
-    download_format: str = "720",
     language: Optional[str] = None,
     out_dir: Optional[str] = None,
     detect_captions: bool = False,
@@ -31,7 +30,6 @@ def generate_shorts(
         youtube_url: YouTube URL, file:// URL, or local file path.
         num_clips: how many shorts to render.
         aspect_ratio: e.g. "9:16", "1:1".
-        download_format: source resolution ("360" / "480" / "720" / "1080").
         language: ISO-639-1 to force Whisper language detection.
         out_dir: where rendered clips are written. Defaults to
             SHORTS_VIDEOS_DIR (resources/clips); concurrent callers should
@@ -70,9 +68,7 @@ def generate_shorts(
     from .local.gateway_transcriber import transcribe_gateway
     from .local.llm import call_local_llm
 
-    source_path, source_title = download_youtube_local(
-        youtube_url, fmt=download_format
-    )
+    source_path, source_title = download_youtube_local(youtube_url)
 
     transcript = transcribe_gateway(source_path, language=language)
     if not transcript["segments"]:
